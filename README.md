@@ -69,7 +69,9 @@ server.listen(port, function(err, blockchain) { ... });
 
 Both `.provider()` and `.server()` take a single object which allows you to specify behavior of the Ganache instance. This parameter is optional. Available options are:
 
-* `"accounts"`: `Array` of `Object`'s. Each object should have a `balance` key with a hexadecimal value. The key `secretKey` can also be specified, which represents the account's private key. If no `secretKey`, the address is auto-generated with the given balance. If specified, the key is used to determine the account's address.
+* `"accounts"`: `Array` of `Object`'s of the following shape: `{ secretKey: privateKey, balance: HexString }`.
+  * If `secretKey` is specified, the key is used to determine the account's address. Otherwise, the address is auto-generated.
+  * The `balance` is a hexadecimal value of the amount of Ether (in Wei) you want the account to be pre-loaded with.
 * `"debug"`: `boolean` - Output VM opcodes for debugging
 * `"blockTime"`: `number` - Specify blockTime in seconds for automatic mining. If you don't specify this flag, ganache will instantly mine a new block for every transaction. Using the `blockTime` option is discouraged unless you have tests which require a specific mining interval.
 * `"logger"`: `Object` - Object, like `console`, that implements a `log()` function.
@@ -90,7 +92,7 @@ Both `.provider()` and `.server()` take a single object which allows you to spec
 * `"account_keys_path"`: `String` - Specifies a file to save accounts and private keys to, for testing.
 * `"vmErrorsOnRPCResponse"`: `boolean` - Whether or not to transmit transaction failures as RPC errors. Set to `false` for error reporting behaviour which is compatible with other clients such as geth and Parity. This is `true` by default to replicate the error reporting behavior of previous versions of ganache.
 * `"hdPath"`: The hierarchical deterministic path to use when generating accounts. Default: "m/44'/60'/0'/0/"
-* `"hardfork"`: `String` Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, `petersburg` (default), and `istanbul` (beta).
+* `"hardfork"`: `String` Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, `petersburg`, `istanbul`, and `muirGlacier` (default).
 * `"allowUnlimitedContractSize"`: `boolean` - Allows unlimited contract sizes while debugging (NOTE: this setting is often used in conjuction with an increased `gasLimit`). By setting this to `true`, the check within the EVM for contract size limit of 24KB (see [EIP-170](https://git.io/vxZkK)) is bypassed. Setting this to `true` **will** cause `ganache-core` to behave differently than production environments. (default: `false`; **ONLY** set to `true` during debugging).
 * `"gasPrice"`: `String::hex` Sets the default gas price for transactions if not otherwise specified. Must be specified as a `hex` encoded string in `wei`. Defaults to `"0x77359400"` (2 `gwei`).
 * `"gasLimit"`: `String::hex | number` Sets the block gas limit. Must be specified as a `hex` string or `number`(integer). Defaults to `"0x6691b7"`.
@@ -190,7 +192,7 @@ Special non-standard methods that aren’t included within the original RPC spec
   ```json
   { "id": 1337, "jsonrpc": "2.0", "result": "060" }
   ```
-* `evm_mine` : Force a block to be mined. Takes one optional parameter, which is the timestamp a block should setup as the mining time. Mines a block independent of whether or not mining is started or stopped.
+* `evm_mine` : Force a block to be mined (independent of mining status: started | stopped). Takes one **optional** parameter, which is the timestamp a block should setup as the mining time. NOTE: the timestamp parameter should be specified in `seconds`. In JavaScript you would calculate it like this: `Math.floor(Date.now() / 1000);`
   ```bash
   # Ex: new Date("2009-01-03T18:15:05+00:00").getTime()
   curl -H "Content-Type: application/json" -X POST --data \

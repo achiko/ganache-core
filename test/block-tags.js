@@ -17,6 +17,10 @@ describe("Block Tags", function() {
     context = await initializeTestProvider(options);
   });
 
+  before("Stop automatic miner", async function() {
+    await context.send("miner_stop");
+  });
+
   before("Get initial balance, nonce and block number", async function() {
     const { accounts, web3 } = context;
 
@@ -38,11 +42,15 @@ describe("Block Tags", function() {
   before("Make a transaction that changes the balance, code and nonce", async function() {
     const { accounts, web3 } = context;
     const { result } = compile("./test/contracts/examples/", "Example");
-    const { contractAddress } = await web3.eth.sendTransaction({
+    const contractPromise = web3.eth.sendTransaction({
       from: accounts[0],
       data: "0x" + result.contracts["Example.sol"].Example.evm.bytecode.object,
       gas: 3141592
     });
+    contractPromise.on("transactionHash", () => {
+      context.send("evm_mine", 1);
+    });
+    const { contractAddress } = await contractPromise;
 
     initialState.contractAddress = contractAddress;
   });
@@ -93,12 +101,12 @@ describe("Block Tags", function() {
     assert.notStrictEqual(block.transactionsRoot, block.receiptsRoot, "Trie roots should not be equal.");
     assert.strictEqual(
       block.transactionsRoot,
-      "0x640ef2dc816947c37f8d21e998c5d6f1f51be8a1d236cfb2597944c1a71ffbba",
+      "0x1d790d78fb45a013f23735cdb280258bd773392ea52913c939ed48eb916362db",
       "Should produce correct transactionsRoot"
     );
     assert.strictEqual(
       block.receiptsRoot,
-      "0xfc83d70860b2ea62a20c8a9618b615548fa0cf6ddd9a456994f53652c51725df",
+      "0x9b620919250d3ae8b3096dcda9152491c92f98ca0e7a8cfc756a46a88e49156a",
       "Should produce correct receiptsRoot"
     );
   });
